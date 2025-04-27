@@ -18,7 +18,7 @@ const swaggerOptions = {
       },
     ],
   },
-  apis: ['./index.js'],
+  apis: ['./rest-api/index.js'],
 }
 
 const app = express()
