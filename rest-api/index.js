@@ -24,7 +24,7 @@ const swaggerOptions = {
 const app = express()
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
-app.use('/', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+app.use('/swaggerUI', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 const THESECRET = 'secret of secrets';
 
@@ -58,6 +58,7 @@ const requireAuth = (req, res, next) => {
 
   next();
 }
+
 /**
  * @swagger
  * /users:
@@ -83,17 +84,14 @@ const requireAuth = (req, res, next) => {
  *                   last_name:
  *                     type: string
  */
-
- 
 app.get("/users",requireAuth, async function (req, res) {
   let connection = await getDBConnnection()
   let sql = `SELECT * FROM users`   
   let [results] = await connection.execute(sql)
 
-  //res.json() skickar resultat som JSON till klienten
   res.json(results)
-
 })
+
 /**
  * @swagger
  * /users/{id}:
@@ -127,10 +125,8 @@ app.get("/users",requireAuth, async function (req, res) {
 app.get("/users/:id",requireAuth, async function(req, res){
   let connection = await getDBConnnection()
   let sql = `SELECT * FROM users WHERE id = ?`   
-  //Varför behövde jag lägga till [req.params.id]? 
   let [results] = await connection.execute(sql, [req.params.id])
 
-  //res.json() skickar resultat som JSON till klienten
   console.log(req.params.id)
   res.json(results)
 })
@@ -141,6 +137,12 @@ async function hashPassword(password) {
   const hashedPassword = await bcrypt.hash(password, salt);
   return hashedPassword;    
 };
+
+app.get("/hash", async function(req, res){
+  let hashed = await hashPassword(req.query.password)
+  res.send(hashed)
+})
+
 
 const isValidUser = (req, res, next) => {
   const { username,password } = req.body;
@@ -238,6 +240,7 @@ app.post("/users", requireAuth, isValidUser, async function (req, res) {
     res.status(400).json({ error: error.message });
   }
   });
+
 /**
  * @swagger
  * /login:
@@ -302,6 +305,7 @@ app.post("/login", isValidLogin, async function (req, res) {
     res.status(500).json({ error: error.message });
   }
 });
+
 /**
  * @swagger
  * /users/{id}:
